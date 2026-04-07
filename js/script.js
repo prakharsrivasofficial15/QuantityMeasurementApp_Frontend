@@ -192,7 +192,9 @@ App.Session = (() => {
 /* ============================================================
    App.Auth  —  Modal-based Login, Signup, tab switching
    ============================================================ */
-/* IIFE module for authentication functionality */
+App.Auth = (() => {
+  const USERS_KEY = 'qm_users';
+
   /* Load user array from localStorage. */
   function _getUsers() {
     try { return JSON.parse(localStorage.getItem(USERS_KEY) || '[]'); }
@@ -307,7 +309,6 @@ App.Session = (() => {
 /* ============================================================
    App.Converter  —  Async unit conversion with AJAX simulation
    ============================================================ */
-/* IIFE module for handling unit conversion UI and logic */
 App.Converter = (() => {
 
   /**
@@ -434,7 +435,6 @@ App.Converter = (() => {
 /* ============================================================
    App.History  —  localStorage history (login-gated)
    ============================================================ */
-/* IIFE module for managing conversion history */
 App.History = (() => {
   const MAX_ENTRIES = 50;
 
@@ -518,10 +518,10 @@ App.History = (() => {
   return { save, clear, render };
 })();
 
+
 /* ============================================================
    App.UI  —  Shared UI helpers
    ============================================================ */
-/* IIFE module for shared UI utility functions */
 App.UI = (() => {
   let _toastTimer = null;
 
@@ -574,7 +574,6 @@ App.UI = (() => {
 /* ============================================================
    App.init  —  Bootstrap everything on DOM ready
    ============================================================ */
-/* Initialization function called on DOMContentLoaded */
 App.init = function () {
 
   // 1. Restore session from sessionStorage
@@ -614,5 +613,4 @@ App.init = function () {
 };
 
 // Run on DOM ready
-/* Event listener to initialize the app when DOM is ready */
 document.addEventListener('DOMContentLoaded', App.init);

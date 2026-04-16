@@ -1,0 +1,175 @@
+<div class="app-shell">
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="navbar-inner">
+      <a class="brand" routerLink="/">
+        <span class="brand-mark">QM</span>
+        <span class="brand-name">App</span>
+      </a>
+      <nav class="nav-links">
+        <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">Converter</a>
+        <a routerLink="/history" routerLinkActive="active"
+           (click)="handleAuthClick($event)">
+          History
+        </a>
+      </nav>
+      <div class="navbar-right">
+        <ng-container *ngIf="auth.isLoggedIn(); else signInBtn">
+          <span class="user-name">{{ auth.currentUser()?.username }}</span>
+          <button class="btn-outline" (click)="auth.logout()">Sign out</button>
+        </ng-container>
+        <ng-template #signInBtn>
+          <button class="btn-signin" (click)="showAuthModal.set(true)">Sign In</button>
+        </ng-template>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="content">
+    <div class="page-title">
+      <h1>Unit Converter</h1>
+      <p>Convert, compare, and calculate across 4 measurement categories.</p>
+    </div>
+
+    <!-- CATEGORY TABS -->
+    <div class="category-bar">
+      <button
+        *ngFor="let cat of categories"
+        class="cat-tab"
+        [class.active]="selectedCategory() === cat"
+        (click)="selectCategory(cat)">
+        <span class="cat-icon">{{ getCategoryIcon(cat) }}</span>
+        {{ cat | titlecase }}
+      </button>
+    </div>
+
+    <div class="content-grid">
+
+      <!-- CONVERTER CARD -->
+      <div class="converter-card">
+
+        <!-- OPERATION TABS -->
+        <div class="op-tabs">
+          <button
+            *ngFor="let op of operations"
+            class="op-tab"
+            [class.active]="operationMode() === op.key"
+            (click)="selectOperation(op.key)">
+            {{ op.label }}
+          </button>
+        </div>
+
+        <!-- CONVERT MODE -->
+        <div class="form-body" *ngIf="operationMode() === 'convert'">
+          <div class="input-row">
+            <div class="field-group">
+              <label>From</label>
+              <div class="input-combo">
+                <input type="number" [value]="value1()" (input)="onValue1Input($event)"
+                       placeholder="0" class="val-input"/>
+                <select [value]="fromUnit()" (change)="onFromUnitChange($event)" class="unit-select">
+                  <option *ngFor="let u of unitOptions()" [value]="u.value">{{ u.label }} ({{ u.symbol }})</option>
+                </select>
+              </div>
+            </div>
+
+            <button class="swap-btn" (click)="swapUnits()" title="Swap units">⇄</button>
+
+            <div class="field-group">
+              <label>To</label>
+              <select [value]="toUnit()" (change)="onToUnitChange($event)" class="unit-select full-width">
+                <option *ngFor="let u of unitOptions()" [value]="u.value">{{ u.label }} ({{ u.symbol }})</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- ARITHMETIC / COMPARE MODE -->
+        <div class="form-body" *ngIf="needsSecondInput()">
+          <div class="field-group">
+            <label>First quantity</label>
+            <div class="input-combo">
+              <input type="number" [value]="value1()" (input)="onValue1Input($event)"
+                     placeholder="0" class="val-input"/>
+              <select [value]="fromUnit()" (change)="onFromUnitChange($event)" class="unit-select">
+                <option *ngFor="let u of unitOptions()" [value]="u.value">{{ u.label }} ({{ u.symbol }})</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="op-divider">
+            <span>{{ operationMode() === 'add' ? '+' : operationMode() === 'subtract' ? '−' : operationMode() === 'divide' ? '÷' : '≟' }}</span>
+          </div>
+
+          <div class="field-group">
+            <label>Second quantity</label>
+            <div class="input-combo">
+              <input type="number" [value]="value2()" (input)="onValue2Input($event)"
+                     placeholder="0" class="val-input"/>
+              <select [value]="unit2()" (change)="onUnit2Change($event)" class="unit-select">
+                <option *ngFor="let u of unitOptions()" [value]="u.value">{{ u.label }} ({{ u.symbol }})</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- ERROR -->
+        <div class="error-msg" *ngIf="error()">{{ error() }}</div>
+
+        <!-- RESULT -->
+        <div class="result-pill" *ngIf="result() && !error()"
+             [class.equal]="result()?.isEqual"
+             [class.notequal]="operationMode() === 'compare' && !result()?.isEqual">
+          {{ resultLabel() }}
+        </div>
+
+        <!-- CALCULATE BUTTON -->
+        <button class="btn-calculate" (click)="execute()" [disabled]="loading()">
+          <span *ngIf="!loading()">
+            {{ operationMode() === 'convert' ? 'Convert' : operationMode() === 'compare' ? 'Compare' : 'Calculate' }}
+          </span>
+          <span *ngIf="loading()" class="spinner-white"></span>
+        </button>
+
+        <!-- GUEST NOTICE -->
+        <div class="guest-notice" *ngIf="!auth.isLoggedIn()">
+          <span>History is only saved when you <button (click)="showAuthModal.set(true)">sign in</button></span>
+        </div>
+      </div>
+
+      <!-- SIDEBAR: UNIT REFERENCE -->
+      <div class="sidebar">
+        <div class="ref-card">
+          <h3>{{ selectedCategory() | titlecase }} Units</h3>
+          <div class="ref-grid">
+            <ng-container *ngFor="let u of unitOptions()">
+              <div class="ref-chip" (click)="selectUnitFromSidebar(u.value)">
+                <span class="chip-symbol">{{ u.symbol }}</span>
+                <span class="chip-name">{{ u.label }}</span>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+
+        <div class="history-info" *ngIf="auth.isLoggedIn()">
+          <p>Your conversions are being saved.</p>
+          <a routerLink="/history">View History →</a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    QM App — Unit Conversion · History saved when signed in
+  </footer>
+</div>
+
+<!-- AUTH MODAL -->
+<app-auth-modal
+  *ngIf="showAuthModal()"
+  (closed)="showAuthModal.set(false)"
+  (success)="onAuthSuccess()">
+</app-auth-modal>

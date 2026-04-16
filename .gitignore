@@ -65,6 +65,5 @@ jspm_packages/
 .env.production.local
 
 # Angular specific
-.angular/cache/
-.angular/workspace/
+.angular/
 .sass-cache/

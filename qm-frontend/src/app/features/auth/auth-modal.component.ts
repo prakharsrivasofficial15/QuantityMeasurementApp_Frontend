@@ -47,9 +47,20 @@ export class AuthModalComponent {
     } else {
       this.auth.register(this.registerForm).subscribe({
         next: () => {
-          this.loading.set(false);
-          this.switchMode('login');
-          this.error.set('');
+          // Auto-login after successful registration
+          this.auth.login({ username: this.registerForm.username, password: this.registerForm.password }).subscribe({
+            next: () => {
+              this.loading.set(false);
+              this.success.emit();
+              this.closed.emit();
+            },
+            error: () => {
+              // Registration succeeded; fall back to showing login tab
+              this.loading.set(false);
+              this.switchMode('login');
+              this.error.set('Account created! Please sign in.');
+            }
+          });
         },
         error: (err: any) => {
           this.loading.set(false);
